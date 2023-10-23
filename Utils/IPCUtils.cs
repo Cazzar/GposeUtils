@@ -23,8 +23,7 @@ public class IPCUtils
     {
         try
         {
-            var (major, minor) = _brioApiVersion.InvokeFunc();
-            Services.Log.Info("Brio API version: {Major}.{Minor}", major, minor);
+            var (major, minor) = _brioApiVersion.InvokeFunc(); 
             return ShowBrioAvailable = major == 1;
         }
         catch (Exception)
