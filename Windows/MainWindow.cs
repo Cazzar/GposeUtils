@@ -1,3 +1,4 @@
+using System.Numerics;
 using Dalamud.Interface;
 using FFXIVClientStructs.FFXIV.Client.Game.Object;
 using GposeUtils.Utils;
@@ -11,13 +12,26 @@ public class MainWindow : PluginWindow
     private bool _autoTarget = Plugin.Configuration.AutoTarget;
     
     protected override string WindowName => "GPose Utilities";
+
+    public override void Toggle()
+    {
+        IPCUtils.IsBrioAvailable();
+        base.Toggle();
+    }
+
     protected override void Contents()
     {
-        // if (ImGui.Button("Spawn Sun"))
-        //     IPCUtils.SpawnWithModelId(585);
-        //
-        // if (ImGui.Button("Spawn Moon"))
-        //     IPCUtils.SpawnWithModelId(1855);
+        if (!IPCUtils.ShowBrioAvailable)
+        {
+            ImGui.TextColored(new (255, 0, 0, 255), "Brio IPC is not enabled.");
+            ImGui.Text("Please enable and install Brio");
+            ImGui.Text("As well as enabling IPC in");
+            ImGui.Text("Settings -> Integrations");
+            if (GuiHelpers.IconButton(FontAwesomeIcon.Sync))
+                IPCUtils.IsBrioAvailable();
+
+            return;
+        }
 
         ImGui.BeginListBox("###actor_spawn_favourites", new(-1, ImGui.GetTextLineHeight() * 9));
 

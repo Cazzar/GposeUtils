@@ -9,15 +9,35 @@ namespace GposeUtils.Utils;
 public class IPCUtils
 {
     private static ICallGateSubscriber<GameObject?> _spawnBrio;
-
+    private static ICallGateSubscriber<(int, int)> _brioApiVersion;
+    
     public static void Init(DalamudPluginInterface pi)
     { 
+        _brioApiVersion = pi.GetIpcSubscriber<(int, int)>("Brio.ApiVersion");
         _spawnBrio = pi.GetIpcSubscriber<GameObject?>("Brio.SpawnActor");
     }
-
+    
+    internal static bool ShowBrioAvailable { get; private set; }
+    
+    internal static bool IsBrioAvailable()
+    {
+        try
+        {
+            var (major, minor) = _brioApiVersion.InvokeFunc();
+            Services.Log.Info("Brio API version: {Major}.{Minor}", major, minor);
+            return ShowBrioAvailable = major == 1;
+        }
+        catch (Exception)
+        {
+            return false;
+        }
+    }
+    
     internal static GameObject? SpawnBrioActor()
     {
         if (!Plugin.IsInGPose) return null;
+        if (!IsBrioAvailable()) return null;
+        
         try
         {
             return _spawnBrio.InvokeFunc();

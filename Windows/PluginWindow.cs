@@ -17,7 +17,7 @@ public abstract class PluginWindow
         set => _isOpen = value;
     }
     
-    public void Toggle() => IsOpen = !IsOpen;
+    public virtual void Toggle() => IsOpen = !IsOpen;
 
     protected abstract string WindowName { get; }
 
