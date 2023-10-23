@@ -56,11 +56,8 @@ jobs:
       - name: Build plugin in release mode
         run: dotnet build -c Release --no-restore --nologo
       
-      - name: Get working dir
-        run: pwd
-
       - name: Upload Artifacts
         uses: actions/upload-artifact@v3
         with:
           name: Build Artifacts
-          path: GposeUtils/bin/
+          path: bin/Release/
