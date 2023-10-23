@@ -11,16 +11,16 @@ namespace DalamudPluginProjectTemplate
         public string CoolText { get; set; }
         #endregion
 
-        private readonly DalamudPluginInterface pluginInterface;
+        private readonly DalamudPluginInterface _pluginInterface;
 
         public Configuration(DalamudPluginInterface pi)
         {
-            this.pluginInterface = pi;
+            this._pluginInterface = pi;
         }
 
         public void Save()
         {
-            this.pluginInterface.SavePluginConfig(this);
+            this._pluginInterface.SavePluginConfig(this);
         }
     }
 }

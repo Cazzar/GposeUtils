@@ -4,22 +4,23 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
+using Dalamud.Plugin.Services;
 using static Dalamud.Game.Command.CommandInfo;
 
 namespace DalamudPluginProjectTemplate
 {
     public class PluginCommandManager<THost> : IDisposable
     {
-        private readonly CommandManager commandManager;
-        private readonly (string, CommandInfo)[] pluginCommands;
-        private readonly THost host;
+        private readonly ICommandManager _commandManager;
+        private readonly (string, CommandInfo)[] _pluginCommands;
+        private readonly THost _host;
 
-        public PluginCommandManager(THost host, CommandManager commandManager)
+        public PluginCommandManager(THost host, ICommandManager commandManager)
         {
-            this.commandManager = commandManager;
-            this.host = host;
+            this._commandManager = commandManager;
+            this._host = host;
 
-            this.pluginCommands = host.GetType().GetMethods(BindingFlags.NonPublic | BindingFlags.Public | BindingFlags.Static | BindingFlags.Instance)
+            this._pluginCommands = host.GetType().GetMethods(BindingFlags.NonPublic | BindingFlags.Public | BindingFlags.Static | BindingFlags.Instance)
                 .Where(method => method.GetCustomAttribute<CommandAttribute>() != null)
                 .SelectMany(GetCommandInfoTuple)
                 .ToArray();
@@ -29,23 +30,23 @@ namespace DalamudPluginProjectTemplate
         
         private void AddCommandHandlers()
         {
-            foreach (var (command, commandInfo) in this.pluginCommands)
+            foreach (var (command, commandInfo) in this._pluginCommands)
             {
-                this.commandManager.AddHandler(command, commandInfo);
+                this._commandManager.AddHandler(command, commandInfo);
             }
         }
 
         private void RemoveCommandHandlers()
         {
-            foreach (var (command, _) in this.pluginCommands)
+            foreach (var (command, _) in this._pluginCommands)
             {
-                this.commandManager.RemoveHandler(command);
+                this._commandManager.RemoveHandler(command);
             }
         }
 
         private IEnumerable<(string, CommandInfo)> GetCommandInfoTuple(MethodInfo method)
         {
-            var handlerDelegate = (HandlerDelegate)Delegate.CreateDelegate(typeof(HandlerDelegate), this.host, method);
+            var handlerDelegate = (HandlerDelegate)Delegate.CreateDelegate(typeof(HandlerDelegate), this._host, method);
 
             var command = handlerDelegate.Method.GetCustomAttribute<CommandAttribute>();
             var aliases = handlerDelegate.Method.GetCustomAttribute<AliasesAttribute>();
@@ -60,12 +61,11 @@ namespace DalamudPluginProjectTemplate
 
             // Create list of tuples that will be filled with one tuple per alias, in addition to the base command tuple.
             var commandInfoTuples = new List<(string, CommandInfo)> { (command!.Command, commandInfo) };
-            if (aliases != null)
+            if (aliases == null) return commandInfoTuples;
+            
+            foreach (var alias in aliases.Aliases)
             {
-                foreach (var alias in aliases.Aliases)
-                {
-                    commandInfoTuples.Add((alias, commandInfo));
-                }
+                commandInfoTuples.Add((alias, commandInfo));
             }
 
             return commandInfoTuples;
