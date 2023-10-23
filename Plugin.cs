@@ -1,57 +1,55 @@
 ﻿using Dalamud.Interface.Windowing;
 using Dalamud.Plugin;
 using System;
+using Dalamud.Game.Command;
 using Dalamud.Plugin.Services;
+using GposeUtils.Utils;
+using GposeUtils.Windows;
 
 namespace GposeUtils;
 
 public class Plugin : IDalamudPlugin
 {
+    public static Configuration Configuration { get; private set; } = null!;
     private readonly DalamudPluginInterface _pluginInterface;
-    private readonly IChatGui _chat;
-    private readonly IClientState _clientState;
-    private readonly IPluginLog _log;
 
-    private readonly Configuration _config;
-    private readonly WindowSystem _windowSystem;
-
-    public string Name => "Your Plugin's Display Name";
+    public static bool IsInGPose => Services.ClientState.IsGPosing;
+    
+    public string Name => "GPose Utilities";
+    public string CommandName => "/gposeutils";
 
     public Plugin(
-        DalamudPluginInterface pi,
-        ICommandManager commands,
-        IChatGui chat,
-        IClientState clientState,
-        IPluginLog log
+        DalamudPluginInterface pi
     ) {
-        this._pluginInterface = pi;
-        this._chat = chat;
-        this._clientState = clientState;
-        _log = log;
+        Services.Init(pi);
+        _pluginInterface = pi;
+        IPCUtils.Init(pi);
 
-        // Get or create a configuration object
-        this._config = (Configuration)(this._pluginInterface.GetPluginConfig() ?? this._pluginInterface.Create<Configuration>())!;
+        Configuration = pi.GetPluginConfig() as Configuration ?? pi.Create<Configuration>()!;
 
-        // Initialize the UI
-        this._windowSystem = new(typeof(Plugin).AssemblyQualifiedName);
+        InitCommands();
+        ActorStateWatcher.Init();
+        WindowManager.Init(pi);
+    }
 
-        var window = this._pluginInterface.Create<PluginWindow>();
-        if (window is not null)
-            this._windowSystem.AddWindow(window);
+    private void InitCommands()
+    {
+        Services.CommandManager.AddHandler(CommandName, new(HandleCommand) { HelpMessage = "Open the GPose Utilities window." });
+    }
 
-        this._pluginInterface.UiBuilder.Draw += this._windowSystem.Draw;
+    private void HandleCommand(string command, string arguments)
+    {
+        WindowManager.MainWindow.Toggle();
     }
     
-
 #region IDisposable Support
     protected virtual void Dispose(bool disposing)
     {
         if (!disposing) return;
 
-        this._pluginInterface.SavePluginConfig(this._config);
-
-        this._pluginInterface.UiBuilder.Draw -= this._windowSystem.Draw;
-        this._windowSystem.RemoveAllWindows();
+        _pluginInterface.SavePluginConfig(Configuration);
+        ActorStateWatcher.Dispose();
+        WindowManager.Disposing();
     }
 
     public void Dispose()
