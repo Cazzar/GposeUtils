@@ -1,26 +1,25 @@
 ﻿using Dalamud.Configuration;
 using Dalamud.Plugin;
 
-namespace DalamudPluginProjectTemplate
+namespace GposeUtils;
+
+public class Configuration : IPluginConfiguration
 {
-    public class Configuration : IPluginConfiguration
+    int IPluginConfiguration.Version { get; set; }
+
+#region Saved configuration values
+    public string CoolText { get; set; }
+#endregion
+
+    private readonly DalamudPluginInterface _pluginInterface;
+
+    public Configuration(DalamudPluginInterface pi)
     {
-        int IPluginConfiguration.Version { get; set; }
+        this._pluginInterface = pi;
+    }
 
-        #region Saved configuration values
-        public string CoolText { get; set; }
-        #endregion
-
-        private readonly DalamudPluginInterface _pluginInterface;
-
-        public Configuration(DalamudPluginInterface pi)
-        {
-            this._pluginInterface = pi;
-        }
-
-        public void Save()
-        {
-            this._pluginInterface.SavePluginConfig(this);
-        }
+    public void Save()
+    {
+        this._pluginInterface.SavePluginConfig(this);
     }
 }
