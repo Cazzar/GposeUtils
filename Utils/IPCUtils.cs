@@ -2,6 +2,8 @@
 using Dalamud.Game.ClientState.Objects.Types;
 using Dalamud.Plugin;
 using Dalamud.Plugin.Ipc;
+using FFXIVClientStructs.FFXIV.Client.Graphics.Scene;
+using SharpDX;
 using Character = FFXIVClientStructs.FFXIV.Client.Game.Character.Character;
 
 namespace GposeUtils.Utils;
@@ -10,6 +12,10 @@ public class IPCUtils
 {
     private static ICallGateSubscriber<GameObject?> _spawnBrio;
     private static ICallGateSubscriber<(int, int)> _brioApiVersion;
+
+    internal unsafe delegate void ActorSpawned(Character* actor);
+
+    internal static ActorSpawned? OnActorSpawned;
     
     public static void Init(DalamudPluginInterface pi)
     { 
@@ -32,7 +38,7 @@ public class IPCUtils
         }
     }
     
-    internal static GameObject? SpawnBrioActor()
+    private static GameObject? SpawnBrioActor()
     {
         if (!Plugin.IsInGPose) return null;
         if (!IsBrioAvailable()) return null;
@@ -50,7 +56,7 @@ public class IPCUtils
         return null;
     }
 
-    internal static GameObject? SpawnWithModelId(int modelId)
+    internal static GameObject? SpawnWithModelId(int modelId, Vector3? positionDelta = null, float? scale = null)
     {
         var brioObject = SpawnBrioActor();
         
@@ -62,6 +68,24 @@ public class IPCUtils
                 actor->CharacterData.ModelCharaId = modelId;
                 actor->DrawData.HideWeapons(true);
                 actor->DrawData.HideHeadgear(0, true);
+
+                var pos = actor->GameObject.Position;
+                var delta = positionDelta.GetValueOrDefault(Vector3.Zero);
+
+                pos.X -= delta.X;
+                pos.Y -= delta.Y;
+                pos.Z -= delta.Z;
+
+                actor->GameObject.Scale = scale.GetValueOrDefault(1f);
+                //
+                // actor->GameObject.Position = pos;
+                // actor->GameObject.DefaultPosition = pos;
+
+                // var cbase = (CharacterBase*) actor->GameObject.DrawObject;
+                // cbase->Skeleton->PartialSkeletons->Skeleton->
+                
+                
+                OnActorSpawned?.Invoke(actor);
                 
                 //Redraw
                 actor->GameObject.DisableDraw();

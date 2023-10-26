@@ -1,25 +1,33 @@
-using System.Numerics;
+﻿using System.Numerics;
 using Dalamud.Interface;
+using Dalamud.Interface.Windowing;
 using FFXIVClientStructs.FFXIV.Client.Game.Object;
 using GposeUtils.Utils;
 using ImGuiNET;
 
 namespace GposeUtils.Windows;
 
-public class MainWindow : PluginWindow
+public class MainWindow : Window
 {
     private int? _selectedModelId = null;
     private bool _autoTarget = Plugin.Configuration.AutoTarget;
+    private float _spawnScale = 1f;
     
-    protected override string WindowName => "GPose Utilities";
-
-    public override void Toggle()
+    public MainWindow() : base("GPose Utilities", ImGuiWindowFlags.NoScrollbar | ImGuiWindowFlags.AlwaysAutoResize)
     {
-        IPCUtils.IsBrioAvailable();
-        base.Toggle();
+        SizeConstraints = new WindowSizeConstraints
+        {
+            MaximumSize = new (2000, 5000),
+            MinimumSize = new (250, 200),
+        };
     }
 
-    protected override void Contents()
+    public override void OnOpen()
+    {
+        IPCUtils.IsBrioAvailable();
+    }
+
+    public override void Draw()
     {
         if (!IPCUtils.ShowBrioAvailable)
         {
@@ -33,6 +41,8 @@ public class MainWindow : PluginWindow
             return;
         }
 
+        if (!Plugin.IsInGPose) ImGui.BeginDisabled();
+        
         ImGui.BeginListBox("###actor_spawn_favourites", new(-1, ImGui.GetTextLineHeight() * 9));
 
         foreach (var (modelId, name) in Plugin.Configuration.Favourites)
@@ -45,12 +55,13 @@ public class MainWindow : PluginWindow
         
         ImGui.EndListBox();
         
+        
         if (GuiHelpers.IconButton(FontAwesomeIcon.Plus))
         {
             ImGui.OpenPopup("###actor_spawn_favourites_add");
         }
 
-        ImGui.SameLine(ImGui.GetContentRegionAvail().X - GuiHelpers.CalcIconSize(FontAwesomeIcon.Trash).X);
+        ImGui.SameLine(ImGui.GetContentRegionAvail().X - 3 - GuiHelpers.CalcIconSize(FontAwesomeIcon.Trash).X);
         if (GuiHelpers.IconButtonHoldCtrlConfirm(FontAwesomeIcon.Trash, "Remove (Ctrl to confirm)"))
         {
             if (_selectedModelId != null)
@@ -59,16 +70,17 @@ public class MainWindow : PluginWindow
                 Plugin.Configuration.Save();
             }
         }
-        
+
+        ImGui.SliderFloat("Scale", ref _spawnScale, 0f, 1f);  
                 
         ImGui.Checkbox("Auto Target", ref _autoTarget);
         Plugin.Configuration.AutoTarget = _autoTarget;
         
-        ImGui.SameLine(ImGui.GetContentRegionAvail().X  - ImGui.CalcTextSize("Spawn").X);
+        ImGui.SameLine(ImGui.GetContentRegionAvail().X - 7 - ImGui.CalcTextSize("Spawn").X);
         if (_selectedModelId is null) ImGui.BeginDisabled();
         if (ImGui.Button("Spawn!") && _selectedModelId != null)
         {
-            var gameObject = IPCUtils.SpawnWithModelId(_selectedModelId.Value);
+            var gameObject = IPCUtils.SpawnWithModelId(_selectedModelId.Value, scale: _spawnScale);
             if (_autoTarget && gameObject is not null && Plugin.IsInGPose)
             {
                 unsafe
@@ -77,10 +89,49 @@ public class MainWindow : PluginWindow
                 }
             }
         }
-        ImGui.EndDisabled();
+        if (_selectedModelId is null) ImGui.EndDisabled();
         
+#if ENABLE_SCENES
+         if (ImGui.CollapsingHeader("Scenes"))
+            DrawScenes();       
+#endif
         
+        if (!Plugin.IsInGPose) ImGui.EndDisabled();
+
         DrawPopup();
+        
+    }
+    
+    private string? _selectedName = null;
+    private string _newName = "";
+    private void DrawScenes()
+    {
+        ImGui.BeginListBox("###actor_scene", new(-1, ImGui.GetTextLineHeight() * 9));
+
+        var i = 0;
+        foreach (var (name, scene) in SceneManager.Instance.Scenes)
+        {
+            if (ImGui.Selectable($"{name}###actor_scene{i++}", name == _selectedName))
+            {
+                _selectedName = name;
+            }
+        }
+        
+        ImGui.EndListBox();
+
+        if (_selectedName is null) ImGui.BeginDisabled();
+        if (ImGui.Button("Spawn Scene"))
+        {
+            SceneManager.Instance.GetScene(_selectedName!)?.Load();
+        }
+        if (_selectedName is null) ImGui.EndDisabled();
+        
+        
+        ImGui.InputText("###actor_scene_name", ref _newName, 32);
+        if (ImGui.Button("Add Scene"))
+        {
+            SceneManager.Instance.AddScene(_newName);
+        }
     }
 
     int addInputModelId = 0;

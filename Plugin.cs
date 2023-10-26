@@ -1,8 +1,5 @@
-﻿using Dalamud.Interface.Windowing;
-using Dalamud.Plugin;
+﻿using Dalamud.Plugin;
 using System;
-using Dalamud.Game.Command;
-using Dalamud.Plugin.Services;
 using GposeUtils.Utils;
 using GposeUtils.Windows;
 
@@ -29,6 +26,9 @@ public class Plugin : IDalamudPlugin
 
         InitCommands();
         ActorStateWatcher.Init();
+#if ENABLE_SCENES
+        SceneManager.Instance.Init();
+#endif
         WindowManager.Init(pi);
     }
 
@@ -49,6 +49,9 @@ public class Plugin : IDalamudPlugin
 
         _pluginInterface.SavePluginConfig(Configuration);
         ActorStateWatcher.Dispose();
+#if ENABLE_SCENES
+        SceneManager.Instance.Dispose();
+#endif
         WindowManager.Disposing();
     }
 

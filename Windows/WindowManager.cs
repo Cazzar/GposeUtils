@@ -1,26 +1,22 @@
-﻿using Dalamud.IoC;
+﻿using Dalamud.Interface.Windowing;
 using Dalamud.Plugin;
-using FFXIVClientStructs.FFXIV.Client.Graphics.Scene;
 using GposeUtils.Utils;
-using Lumina.Excel.GeneratedSheets;
 
 namespace GposeUtils.Windows;
 
-public class WindowManager
+public static class WindowManager
 {
     public static MainWindow MainWindow { get; private set; } = null!;
 
-    private static void Draw()
-    {
-        MainWindow.Draw();
-    }
+    private static WindowSystem WindowSystem { get; set; } = new ("GPose Utilities");
     
     public static void Init(DalamudPluginInterface dalamud)
     {
         MainWindow = dalamud.Create<MainWindow>()!;
+        WindowSystem.AddWindow(MainWindow);
 
         Services.PluginInterface.UiBuilder.DisableGposeUiHide = true;
-        Services.PluginInterface.UiBuilder.Draw += Draw;
+        Services.PluginInterface.UiBuilder.Draw += WindowSystem.Draw;
         
         ActorStateWatcher.OnGPoseChange += OnGPoseChange;
     }
@@ -32,6 +28,6 @@ public class WindowManager
 
     internal static void Disposing()
     {
-        Services.PluginInterface.UiBuilder.Draw -= Draw;
+        Services.PluginInterface.UiBuilder.Draw -= WindowSystem.Draw;
     }
 }
