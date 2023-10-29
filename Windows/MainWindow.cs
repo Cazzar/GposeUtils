@@ -1,5 +1,4 @@
-﻿using System.Numerics;
-using Dalamud.Interface;
+﻿using Dalamud.Interface;
 using Dalamud.Interface.Windowing;
 using FFXIVClientStructs.FFXIV.Client.Game.Object;
 using GposeUtils.Utils;
@@ -9,6 +8,8 @@ namespace GposeUtils.Windows;
 
 public class MainWindow : Window
 {
+    private const float SpawnScaleMin = 0.001f;
+    
     private int? _selectedModelId = null;
     private bool _autoTarget = Plugin.Configuration.AutoTarget;
     private float _spawnScale = 1f;
@@ -71,7 +72,8 @@ public class MainWindow : Window
             }
         }
 
-        ImGui.SliderFloat("Scale", ref _spawnScale, 0f, 1f);  
+        if (_spawnScale <= SpawnScaleMin) _spawnScale = SpawnScaleMin;
+        ImGui.SliderFloat("Scale", ref _spawnScale, SpawnScaleMin, 1f);  
                 
         ImGui.Checkbox("Auto Target", ref _autoTarget);
         Plugin.Configuration.AutoTarget = _autoTarget;
@@ -80,6 +82,8 @@ public class MainWindow : Window
         if (_selectedModelId is null) ImGui.BeginDisabled();
         if (ImGui.Button("Spawn!") && _selectedModelId != null)
         {
+            if (_spawnScale <= SpawnScaleMin) _spawnScale = SpawnScaleMin;
+
             var gameObject = IPCUtils.SpawnWithModelId(_selectedModelId.Value, scale: _spawnScale);
             if (_autoTarget && gameObject is not null && Plugin.IsInGPose)
             {
