@@ -9,10 +9,12 @@ namespace GposeUtils.Windows;
 public class MainWindow : Window
 {
     private const float SpawnScaleMin = 0.001f;
+    private const float OpacityMin = 0f;
     
     private int? _selectedModelId = null;
     private bool _autoTarget = Plugin.Configuration.AutoTarget;
     private float _spawnScale = 1f;
+    private float _opacity = 1f;
     
     public MainWindow() : base("GPose Utilities", ImGuiWindowFlags.NoScrollbar | ImGuiWindowFlags.AlwaysAutoResize)
     {
@@ -73,7 +75,12 @@ public class MainWindow : Window
         }
 
         if (_spawnScale <= SpawnScaleMin) _spawnScale = SpawnScaleMin;
-        ImGui.SliderFloat("Scale", ref _spawnScale, SpawnScaleMin, 1f);  
+        ImGui.SliderFloat("Scale", ref _spawnScale, SpawnScaleMin, 1f);
+        GuiHelpers.Tooltip("The scale to spawn the actor as, this has to be set before spawning.");
+        
+        if (_opacity <= OpacityMin) _opacity = OpacityMin;
+        ImGui.SliderFloat("Opacity", ref _opacity, OpacityMin, 1f);
+        GuiHelpers.Tooltip("The opacity to spawn the actor as, this has to be set before spawning.");
                 
         ImGui.Checkbox("Auto Target", ref _autoTarget);
         Plugin.Configuration.AutoTarget = _autoTarget;
@@ -84,7 +91,7 @@ public class MainWindow : Window
         {
             if (_spawnScale <= SpawnScaleMin) _spawnScale = SpawnScaleMin;
 
-            var gameObject = IPCUtils.SpawnWithModelId(_selectedModelId.Value, scale: _spawnScale);
+            var gameObject = IPCUtils.SpawnWithModelId(_selectedModelId.Value, scale: _spawnScale, opacity: _opacity);
             if (_autoTarget && gameObject is not null && Plugin.IsInGPose)
             {
                 unsafe

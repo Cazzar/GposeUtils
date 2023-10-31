@@ -56,7 +56,7 @@ public class IPCUtils
         return null;
     }
 
-    internal static GameObject? SpawnWithModelId(int modelId, Vector3? positionDelta = null, float? scale = null)
+    internal static GameObject? SpawnWithModelId(int modelId, Vector3? positionDelta = null, float? scale = null, float? opacity = null)
     {
         var brioObject = SpawnBrioActor();
         
@@ -77,6 +77,8 @@ public class IPCUtils
                 pos.Z -= delta.Z;
 
                 actor->GameObject.Scale = scale.GetValueOrDefault(1f);
+                actor->Alpha = opacity.GetValueOrDefault(1f);
+
                 //
                 // actor->GameObject.Position = pos;
                 // actor->GameObject.DefaultPosition = pos;
@@ -90,6 +92,7 @@ public class IPCUtils
                 //Redraw
                 actor->GameObject.DisableDraw();
                 actor->GameObject.EnableDraw();
+                
             }
         }
 
