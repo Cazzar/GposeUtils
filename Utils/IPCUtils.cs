@@ -59,41 +59,39 @@ public class IPCUtils
     internal static GameObject? SpawnWithModelId(int modelId, Vector3? positionDelta = null, float? scale = null, float? opacity = null)
     {
         var brioObject = SpawnBrioActor();
+
+        if (brioObject is null) return null;
         
-        if (brioObject != null)
+        unsafe
         {
-            unsafe
-            {
-                var actor = (Character*)brioObject.Address;
-                actor->CharacterData.ModelCharaId = modelId;
-                actor->DrawData.HideWeapons(true);
-                actor->DrawData.HideHeadgear(0, true);
+            var actor = (Character*)brioObject.Address;
+            actor->CharacterData.ModelCharaId = modelId;
+            actor->DrawData.HideWeapons(true);
+            actor->DrawData.HideHeadgear(0, true);
 
-                var pos = actor->GameObject.Position;
-                var delta = positionDelta.GetValueOrDefault(Vector3.Zero);
+            var pos = actor->GameObject.Position;
+            var delta = positionDelta.GetValueOrDefault(Vector3.Zero);
 
-                pos.X -= delta.X;
-                pos.Y -= delta.Y;
-                pos.Z -= delta.Z;
+            pos.X -= delta.X;
+            pos.Y -= delta.Y;
+            pos.Z -= delta.Z;
 
-                actor->GameObject.Scale = scale.GetValueOrDefault(1f);
-                actor->Alpha = opacity.GetValueOrDefault(1f);
+            actor->GameObject.Scale = scale.GetValueOrDefault(1f);
+            actor->Alpha = opacity.GetValueOrDefault(1f);
 
-                //
-                // actor->GameObject.Position = pos;
-                // actor->GameObject.DefaultPosition = pos;
-
-                // var cbase = (CharacterBase*) actor->GameObject.DrawObject;
-                // cbase->Skeleton->PartialSkeletons->Skeleton->
+            //
+            // actor->GameObject.Position = pos;
+            // actor->GameObject.DefaultPosition = pos;
+            // var cbase = (CharacterBase*) actor->GameObject.DrawObject;
+            // cbase->Skeleton->PartialSkeletons->Skeleton->
                 
                 
-                OnActorSpawned?.Invoke(actor);
+            OnActorSpawned?.Invoke(actor);
                 
-                //Redraw
-                actor->GameObject.DisableDraw();
-                actor->GameObject.EnableDraw();
+            //Redraw
+            actor->GameObject.DisableDraw();
+            actor->GameObject.EnableDraw();
                 
-            }
         }
 
         return brioObject;
