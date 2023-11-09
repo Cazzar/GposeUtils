@@ -13,12 +13,10 @@ public class ImGuiDisposableDisable : IDisposable
     {
         _disabled = disabled;
         if (_disabled) ImGui.BeginDisabled();
-        Services.Log.Info("Added ImGuiDisposableDisable state {s}", _disabled);
     }
     
     public void Dispose()
     {
         if (_disabled) ImGui.EndDisabled();
-        Services.Log.Info("Disposed ImGuiDisposableDisable");
     }
 }
