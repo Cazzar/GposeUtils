@@ -44,7 +44,7 @@ public class MainWindow : Window
             return;
         }
 
-        if (!Plugin.IsInGPose) ImGui.BeginDisabled();
+        using var _ = new ImGuiDisposableDisable(!Plugin.IsInGPose);
         
         ImGui.BeginListBox("###actor_spawn_favourites", new(-1, ImGui.GetTextLineHeight() * 9));
 
@@ -86,28 +86,27 @@ public class MainWindow : Window
         Plugin.Configuration.AutoTarget = _autoTarget;
         
         ImGui.SameLine(ImGui.GetContentRegionAvail().X - 7 - ImGui.CalcTextSize("Spawn").X);
-        if (_selectedModelId is null) ImGui.BeginDisabled();
-        if (ImGui.Button("Spawn!") && _selectedModelId != null)
+        using (new ImGuiDisposableDisable(_selectedModelId is null))
         {
-            if (_spawnScale <= SpawnScaleMin) _spawnScale = SpawnScaleMin;
-
-            var gameObject = IPCUtils.SpawnWithModelId(_selectedModelId.Value, scale: _spawnScale, opacity: _opacity);
-            if (_autoTarget && gameObject is not null && Plugin.IsInGPose)
+            if (ImGui.Button("Spawn!") && _selectedModelId != null)
             {
-                unsafe
+                if (_spawnScale <= SpawnScaleMin) _spawnScale = SpawnScaleMin;
+
+                var gameObject = IPCUtils.SpawnWithModelId(_selectedModelId.Value, scale: _spawnScale, opacity: _opacity);
+                if (_autoTarget && gameObject is not null && Plugin.IsInGPose)
                 {
-                    Services.Targets->GPoseTarget = (GameObject*)gameObject.Address;
+                    unsafe
+                    {
+                        Services.Targets->GPoseTarget = (GameObject*)gameObject.Address;
+                    }
                 }
             }
         }
-        if (_selectedModelId is null) ImGui.EndDisabled();
         
 #if ENABLE_SCENES
          if (ImGui.CollapsingHeader("Scenes"))
             DrawScenes();       
 #endif
-        
-        if (!Plugin.IsInGPose) ImGui.EndDisabled();
 
         DrawPopup();
         
@@ -130,12 +129,13 @@ public class MainWindow : Window
         
         ImGui.EndListBox();
 
-        if (_selectedName is null) ImGui.BeginDisabled();
-        if (ImGui.Button("Spawn Scene"))
+        using (new ImGuiDisposableDisable(_selectedName is null))
         {
-            SceneManager.Instance.GetScene(_selectedName!)?.Load();
+            if (ImGui.Button("Spawn Scene"))
+            {
+                SceneManager.Instance.GetScene(_selectedName!)?.Load();
+            }
         }
-        if (_selectedName is null) ImGui.EndDisabled();
         
         
         ImGui.InputText("###actor_scene_name", ref _newName, 32);
@@ -150,27 +150,26 @@ public class MainWindow : Window
     
     private void DrawPopup()
     {
-        if (ImGui.BeginPopup("###actor_spawn_favourites_add"))
-        {
-            ImGui.Text("Model ID");
-            ImGui.SameLine();
-            ImGui.InputInt("###actor_spawn_favourites_add_model_id", ref addInputModelId);
+        if (!ImGui.BeginPopup("###actor_spawn_favourites_add")) return;
+        
+        ImGui.Text("Model ID");
+        ImGui.SameLine();
+        ImGui.InputInt("###actor_spawn_favourites_add_model_id", ref addInputModelId);
             
-            ImGui.Text("Name");
-            ImGui.SameLine();
-            ImGui.InputText("###actor_spawn_favourites_add_name", ref addInputFavouriteName, 32);
+        ImGui.Text("Name");
+        ImGui.SameLine();
+        ImGui.InputText("###actor_spawn_favourites_add_name", ref addInputFavouriteName, 32);
 
-            if (Plugin.Configuration.Favourites.ContainsKey(addInputModelId)) ImGui.BeginDisabled();
-            if (ImGui.Button("Add"))
-            {
-                Plugin.Configuration.Favourites.Add(addInputModelId, addInputFavouriteName);
-                Plugin.Configuration.Save();
-                addInputModelId = 0;
-                addInputFavouriteName = "";
-                ImGui.CloseCurrentPopup();
-            }
-            
-            ImGui.EndPopup();
+        if (Plugin.Configuration.Favourites.ContainsKey(addInputModelId)) ImGui.BeginDisabled();
+        if (ImGui.Button("Add"))
+        {
+            Plugin.Configuration.Favourites.Add(addInputModelId, addInputFavouriteName);
+            Plugin.Configuration.Save();
+            addInputModelId = 0;
+            addInputFavouriteName = "";
+            ImGui.CloseCurrentPopup();
         }
+            
+        ImGui.EndPopup();
     }
 }
