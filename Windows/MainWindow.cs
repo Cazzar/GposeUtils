@@ -1,5 +1,8 @@
-﻿using Dalamud.Interface;
+﻿using System.Collections.Immutable;
+using Dalamud.Interface;
 using Dalamud.Interface.Windowing;
+using Dalamud.Logging;
+using Dalamud.Plugin.Services;
 using FFXIVClientStructs.FFXIV.Client.Game.Object;
 using GposeUtils.Utils;
 using ImGuiNET;
@@ -8,6 +11,7 @@ namespace GposeUtils.Windows;
 
 public class MainWindow : Window
 {
+    private readonly IPluginLog _log;
     private const float SpawnScaleMin = 0.001f;
     private const float OpacityMin = 0f;
     
@@ -16,8 +20,9 @@ public class MainWindow : Window
     private float _spawnScale = 1f;
     private float _opacity = 1f;
     
-    public MainWindow() : base("GPose Utilities", ImGuiWindowFlags.NoScrollbar | ImGuiWindowFlags.AlwaysAutoResize)
+    public MainWindow(IPluginLog log) : base("GPose Utilities", ImGuiWindowFlags.NoScrollbar | ImGuiWindowFlags.AlwaysAutoResize)
     {
+        _log = log;
         SizeConstraints = new WindowSizeConstraints
         {
             MaximumSize = new (2000, 5000),
@@ -43,22 +48,25 @@ public class MainWindow : Window
 
             return;
         }
+        
+        _log.Debug("Drawing GPose Utilities window.");
 
         using var _ = new ImGuiDisposableDisable(!Plugin.IsInGPose);
         
         ImGui.BeginListBox("###actor_spawn_favourites", new(-1, ImGui.GetTextLineHeight() * 9));
 
-        foreach (var (modelId, name) in Plugin.Configuration.Favourites)
+        foreach (var (modelId, name) in Plugin.Configuration.Favourites.ToImmutableArray())
         {
             if (ImGui.Selectable($"{name}###actor_model_{modelId}", modelId == _selectedModelId))
             {
                 _selectedModelId = modelId;
             }
         }
-        
+        _log.Debug("Finished drawing favourites.");
+
         ImGui.EndListBox();
         
-        
+        _log.Debug("Drawing buttons.");
         if (GuiHelpers.IconButton(FontAwesomeIcon.Plus))
         {
             ImGui.OpenPopup("###actor_spawn_favourites_add");
@@ -74,6 +82,8 @@ public class MainWindow : Window
             }
         }
 
+        _log.Debug("Finished drawing buttons.");
+        _log.Debug("Drawing sliders.");
         if (_spawnScale <= SpawnScaleMin) _spawnScale = SpawnScaleMin;
         ImGui.SliderFloat("Scale", ref _spawnScale, SpawnScaleMin, 1f);
         GuiHelpers.Tooltip("The scale to spawn the actor as, this has to be set before spawning.");
@@ -81,7 +91,9 @@ public class MainWindow : Window
         if (_opacity <= OpacityMin) _opacity = OpacityMin;
         ImGui.SliderFloat("Opacity", ref _opacity, OpacityMin, 1f);
         GuiHelpers.Tooltip("The opacity to spawn the actor as, this has to be set before spawning.");
-                
+        
+        _log.Debug("Finished drawing sliders.");
+        _log.Debug("Drawing checkboxes.");
         ImGui.Checkbox("Auto Target", ref _autoTarget);
         Plugin.Configuration.AutoTarget = _autoTarget;
         
@@ -103,12 +115,17 @@ public class MainWindow : Window
             }
         }
         
+        _log.Debug("Finished drawing checkboxes.");
+        
 #if ENABLE_SCENES
          if (ImGui.CollapsingHeader("Scenes"))
             DrawScenes();       
 #endif
 
+        _log.Debug("Finished drawing GPose Utilities window.");
+        _log.Debug("Drawing popup.");
         DrawPopup();
+        _log.Debug("Finished drawing popup.");
         
     }
     

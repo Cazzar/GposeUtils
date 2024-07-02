@@ -2,9 +2,9 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
+using System.Numerics;
 using System.Runtime.InteropServices.JavaScript;
 using FFXIVClientStructs.FFXIV.Client.Game.Character;
-using SharpDX;
 
 namespace GposeUtils.Utils;
 

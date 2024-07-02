@@ -8,7 +8,7 @@ namespace GposeUtils;
 public class Plugin : IDalamudPlugin
 {
     public static Configuration Configuration { get; private set; } = null!;
-    private readonly DalamudPluginInterface _pluginInterface;
+    private readonly IDalamudPluginInterface _pluginInterface;
 
     public static bool IsInGPose => Services.ClientState.IsGPosing;
     
@@ -16,7 +16,7 @@ public class Plugin : IDalamudPlugin
     public string CommandName => "/gposeutils";
 
     public Plugin(
-        DalamudPluginInterface pi
+        IDalamudPluginInterface pi
     ) {
         Services.Init(pi);
         _pluginInterface = pi;

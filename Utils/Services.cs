@@ -18,7 +18,7 @@ public class Services
     internal static IClientState ClientState { get; private set; } = null!;
     
     [PluginService]
-    internal static DalamudPluginInterface PluginInterface { get; private set; } = null!;
+    internal static IDalamudPluginInterface PluginInterface { get; private set; } = null!;
     
     [PluginService]
     internal static IPluginLog Log { get; private set; } = null!;
@@ -28,7 +28,7 @@ public class Services
 
     internal static readonly unsafe TargetSystem* Targets = TargetSystem.Instance();
     
-    internal static void Init(DalamudPluginInterface pi)
+    internal static void Init(IDalamudPluginInterface pi)
     {
         pi.Create<Services>();
     }

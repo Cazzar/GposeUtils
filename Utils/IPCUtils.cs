@@ -1,32 +1,37 @@
 ﻿using System;
+using System.Linq;
+using System.Numerics;
 using Dalamud.Game.ClientState.Objects.Types;
 using Dalamud.Plugin;
 using Dalamud.Plugin.Ipc;
+using FFXIVClientStructs.FFXIV.Client.Graphics;
 using FFXIVClientStructs.FFXIV.Client.Graphics.Scene;
-using SharpDX;
 using Character = FFXIVClientStructs.FFXIV.Client.Game.Character.Character;
 
 namespace GposeUtils.Utils;
 
 public class IPCUtils
 {
-    private static ICallGateSubscriber<GameObject?> _spawnBrio;
+    private static ICallGateSubscriber<IGameObject?> _spawnBrio;
     private static ICallGateSubscriber<(int, int)> _brioApiVersion;
 
     internal unsafe delegate void ActorSpawned(Character* actor);
 
     internal static ActorSpawned? OnActorSpawned;
     
-    public static void Init(DalamudPluginInterface pi)
+    public static void Init(IDalamudPluginInterface pi)
     { 
         _brioApiVersion = pi.GetIpcSubscriber<(int, int)>("Brio.ApiVersion");
-        _spawnBrio = pi.GetIpcSubscriber<GameObject?>("Brio.SpawnActor");
+        _spawnBrio = pi.GetIpcSubscriber<IGameObject?>("Brio.SpawnActorWithoutCompanion");
     }
     
     internal static bool ShowBrioAvailable { get; private set; }
     
     internal static bool IsBrioAvailable()
     {
+        if (Services.PluginInterface.InstalledPlugins.All(x => x.Name != "Brio"))
+            return false;
+        
         try
         {
             var (major, minor) = _brioApiVersion.InvokeFunc(); 
@@ -38,7 +43,7 @@ public class IPCUtils
         }
     }
     
-    private static GameObject? SpawnBrioActor()
+    private static IGameObject? SpawnBrioActor()
     {
         if (!Plugin.IsInGPose) return null;
         if (!IsBrioAvailable()) return null;
@@ -56,7 +61,7 @@ public class IPCUtils
         return null;
     }
 
-    internal static GameObject? SpawnWithModelId(int modelId, Vector3? positionDelta = null, float? scale = null, float? opacity = null)
+    internal static IGameObject? SpawnWithModelId(int modelId, Vector3? positionDelta = null, float? scale = null, float? opacity = null)
     {
         var brioObject = SpawnBrioActor();
 
@@ -84,7 +89,6 @@ public class IPCUtils
             // actor->GameObject.DefaultPosition = pos;
             // var cbase = (CharacterBase*) actor->GameObject.DrawObject;
             // cbase->Skeleton->PartialSkeletons->Skeleton->
-                
                 
             OnActorSpawned?.Invoke(actor);
                 
