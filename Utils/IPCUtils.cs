@@ -70,7 +70,7 @@ public class IPCUtils
         unsafe
         {
             var actor = (Character*)brioObject.Address;
-            actor->CharacterData.ModelCharaId = modelId;
+            actor->ModelContainer.ModelCharaId = modelId;
             actor->DrawData.HideWeapons(true);
             actor->DrawData.HideHeadgear(0, true);
 

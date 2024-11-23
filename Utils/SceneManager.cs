@@ -41,8 +41,8 @@ public class SceneManager
                         z: localCharacter.Position.Z - charPos.Z
                     );
                     
-                    Services.Log.Info("Adding {modelId} to scene at {x}, {y}, {z} with scale {Scale}", character->CharacterData.ModelCharaId, pos.x, pos.y, pos.z, character->GameObject.Scale);
-                    return (character->CharacterData.ModelCharaId, pos, character->GameObject.Scale);
+                    Services.Log.Info("Adding {modelId} to scene at {x}, {y}, {z} with scale {Scale}", character->ModelContainer.ModelCharaId, pos.x, pos.y, pos.z, character->GameObject.Scale);
+                    return (character->ModelContainer.ModelCharaId, pos, character->GameObject.Scale);
                 }).ToList(),
             Name = name
         });
