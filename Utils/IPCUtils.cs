@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Linq;
 using System.Numerics;
+using System.Threading.Tasks;
 using Dalamud.Game.ClientState.Objects.Types;
 using Dalamud.Plugin;
 using Dalamud.Plugin.Ipc;
@@ -12,7 +13,7 @@ namespace GposeUtils.Utils;
 
 public class IPCUtils
 {
-    private static ICallGateSubscriber<IGameObject?> _spawnBrio;
+    private static ICallGateSubscriber<bool, bool, bool, Task<IGameObject?>> _spawnBrio;
     private static ICallGateSubscriber<(int, int)> _brioApiVersion;
 
     internal unsafe delegate void ActorSpawned(Character* actor);
@@ -22,7 +23,7 @@ public class IPCUtils
     public static void Init(IDalamudPluginInterface pi)
     { 
         _brioApiVersion = pi.GetIpcSubscriber<(int, int)>("Brio.ApiVersion");
-        _spawnBrio = pi.GetIpcSubscriber<IGameObject?>("Brio.SpawnActorWithoutCompanion");
+        _spawnBrio = pi.GetIpcSubscriber<bool, bool, bool, Task<IGameObject?>>("Brio.Actor.SpawnExAsync");
     }
     
     internal static bool ShowBrioAvailable { get; private set; }
@@ -35,22 +36,22 @@ public class IPCUtils
         try
         {
             var (major, minor) = _brioApiVersion.InvokeFunc(); 
-            return ShowBrioAvailable = major == 1;
+            return ShowBrioAvailable = major == 2;
         }
         catch (Exception)
         {
             return false;
         }
     }
-    
-    private static IGameObject? SpawnBrioActor()
+       
+    private static async Task<IGameObject?> SpawnBrioActor()
     {
         if (!Plugin.IsInGPose) return null;
         if (!IsBrioAvailable()) return null;
         
         try
         {
-            return _spawnBrio.InvokeFunc();
+            return await SpawnActorAsync(false, false, false);
         }
         catch (Exception e)
         {
@@ -61,9 +62,9 @@ public class IPCUtils
         return null;
     }
 
-    internal static IGameObject? SpawnWithModelId(int modelId, Vector3? positionDelta = null, float? scale = null, float? opacity = null)
+    internal static async Task<IGameObject?> SpawnWithModelId(int modelId, Vector3? positionDelta = null, float? scale = null, float? opacity = null)
     {
-        var brioObject = SpawnBrioActor();
+        var brioObject = await SpawnBrioActor();
 
         if (brioObject is null) return null;
         
@@ -99,5 +100,19 @@ public class IPCUtils
         }
 
         return brioObject;
+    }
+
+    /// <summary>
+    /// Spawns an actor asynchronously.
+    /// </summary>
+    /// <param name="spawnWithCompanionSlot">Whether to spawn with a companion slot.</param>
+    /// <param name="selectInHierarchy">Whether to select the actor in the hierarchy.</param>
+    /// <param name="spawnFrozen">Whether to spawn the actor with animation speed of 0f.</param>
+    /// <returns>The spawned actor, or null if the spawn failed.</returns>
+    public static async Task<IGameObject?> SpawnActorAsync(bool spawnWithCompanionSlot = false, bool selectInHierarchy = false, bool spawnFrozen = false)
+    {
+        if (!IsBrioAvailable()) return null;
+
+        return await _spawnBrio.InvokeFunc(spawnWithCompanionSlot, selectInHierarchy, spawnFrozen);
     }
 }
