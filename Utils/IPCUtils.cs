@@ -22,7 +22,7 @@ public class IPCUtils
     public static void Init(IDalamudPluginInterface pi)
     { 
         _brioApiVersion = pi.GetIpcSubscriber<(int, int)>("Brio.ApiVersion");
-        _spawnBrio = pi.GetIpcSubscriber<IGameObject?>("Brio.SpawnActorWithoutCompanion");
+        _spawnBrio = pi.GetIpcSubscriber<IGameObject?>("Brio.Actor.Spawn");
     }
     
     internal static bool ShowBrioAvailable { get; private set; }
@@ -35,7 +35,7 @@ public class IPCUtils
         try
         {
             var (major, minor) = _brioApiVersion.InvokeFunc(); 
-            return ShowBrioAvailable = major == 1;
+            return ShowBrioAvailable = major == 2;
         }
         catch (Exception)
         {
