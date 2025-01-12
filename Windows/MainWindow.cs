@@ -35,7 +35,7 @@ public class MainWindow : Window
         IPCUtils.IsBrioAvailable();
     }
 
-    public override void Draw()
+    public override async void Draw()
     {
         if (!IPCUtils.ShowBrioAvailable)
         {
@@ -104,7 +104,7 @@ public class MainWindow : Window
             {
                 if (_spawnScale <= SpawnScaleMin) _spawnScale = SpawnScaleMin;
 
-                var gameObject = IPCUtils.SpawnWithModelId(_selectedModelId.Value, scale: _spawnScale, opacity: _opacity);
+                var gameObject = await IPCUtils.SpawnWithModelId(_selectedModelId.Value, scale: _spawnScale, opacity: _opacity);
                 if (_autoTarget && gameObject is not null && Plugin.IsInGPose)
                 {
                     unsafe
