@@ -31,7 +31,7 @@ jobs:
       IsCI: true
     steps:
       - name: Checkout Repository
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           fetch-depth: 0 # We don't need the history for testing builds, so we can save some time by not fetching it
           submodules: true # Grab any submodules that may be required
@@ -57,7 +57,7 @@ jobs:
         run: dotnet build -c Release --no-restore --nologo
       
       - name: Upload Artifacts
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: release-${{ matrix.dalamud-version }}-${{ matrix.dotnet-version }}
           path: bin/Release/
