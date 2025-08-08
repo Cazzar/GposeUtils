@@ -9,6 +9,9 @@
 	</PropertyGroup>
 
 	<ItemGroup>
-		<None Update="GposeUtils.json" CopyToOutputDirectory="Always" />
+	  <Content Include="GposeUtils.json">
+	    <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+	  </Content>
 	</ItemGroup>
+
 </Project>
