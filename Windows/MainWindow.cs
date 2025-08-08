@@ -1,11 +1,12 @@
 ﻿using System.Collections.Immutable;
+using Dalamud.Bindings.ImGui;
 using Dalamud.Interface;
 using Dalamud.Interface.Windowing;
 using Dalamud.Logging;
 using Dalamud.Plugin.Services;
 using FFXIVClientStructs.FFXIV.Client.Game.Object;
 using GposeUtils.Utils;
-using ImGuiNET;
+using System.Numerics;
 
 namespace GposeUtils.Windows;
 
@@ -39,7 +40,7 @@ public class MainWindow : Window
     {
         if (!IPCUtils.ShowBrioAvailable)
         {
-            ImGui.TextColored(new (255, 0, 0, 255), "Brio IPC is not enabled.");
+            ImGui.TextColored(new Vector4(255, 0, 0, 255), "Brio IPC is not enabled.");
             ImGui.Text("Please enable and install Brio");
             ImGui.Text("As well as enabling IPC in");
             ImGui.Text("Settings -> Integrations");

@@ -4,5 +4,6 @@
   "Description": "A set of useful tools for gposing",
   "Punchline": "A set of useful tools for gposing",
   "RepoUrl": "https://plugins.xiv.cazzar.dev/repo.json",
+  "InternalName": "GposeUtils",
   "Tags": []
 }

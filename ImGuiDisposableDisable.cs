@@ -1,7 +1,7 @@
 ﻿using System;
+using Dalamud.Bindings.ImGui;
 using FFXIVClientStructs.FFXIV.Client.UI.Agent;
 using GposeUtils.Utils;
-using ImGuiNET;
 
 namespace GposeUtils;
 
