@@ -1,6 +1,6 @@
-﻿using Dalamud.Interface;
+﻿using Dalamud.Bindings.ImGui;
+using Dalamud.Interface;
 using FFXIVClientStructs.FFXIV.Common.Math;
-using ImGuiNET;
 
 namespace GposeUtils.Windows;
 
