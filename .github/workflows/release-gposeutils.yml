@@ -66,4 +66,4 @@ jobs:
         set-content -Path $new_path -Value $content
         git add repo.json
         git commit -m "[CI] Updating versions for v${{ github.event.inputs.version }}" || true
-        git push origin main || true
+        git push origin gh-pages || true
