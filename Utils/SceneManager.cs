@@ -32,7 +32,7 @@ public class SceneManager
                 s =>
                 {
                     var character = (Character*)s;
-                    var localCharacter = Services.ClientState.LocalPlayer!;
+                    var localCharacter = Services.ObjectTable.LocalPlayer!;
                     var charPos = character->GameObject.DrawObject->Object.Position;
 
                     var pos = (
@@ -83,12 +83,12 @@ public class SceneManager
         public required string Name { get; init; }
         public required List<(int modelId, (float x, float y, float z) position, float scale)> Actors { get; init; }
         
-        public void Load()
+        public async void Load()
         {
             foreach (var (modelId, position, scale) in Actors)
             {
                 Services.Log.Info("Spawning {ModelId} at {x}, {y}, {z} with scale {Scale}", modelId, position.x, position.y, position.z, scale);
-                IPCUtils.SpawnWithModelId(modelId, new Vector3(position.x, position.y, position.z), scale);
+                await IPCUtils.SpawnWithModelId(modelId, new Vector3(position.x, position.y, position.z), scale);
             }
         }
     }

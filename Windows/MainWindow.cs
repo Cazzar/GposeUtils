@@ -50,8 +50,6 @@ public class MainWindow : Window
             return;
         }
         
-        _log.Debug("Drawing GPose Utilities window.");
-
         using var _ = new ImGuiDisposableDisable(!Plugin.IsInGPose);
         
         ImGui.BeginListBox("###actor_spawn_favourites", new(-1, ImGui.GetTextLineHeight() * 9));
@@ -63,11 +61,8 @@ public class MainWindow : Window
                 _selectedModelId = modelId;
             }
         }
-        _log.Debug("Finished drawing favourites.");
-
         ImGui.EndListBox();
         
-        _log.Debug("Drawing buttons.");
         if (GuiHelpers.IconButton(FontAwesomeIcon.Plus))
         {
             ImGui.OpenPopup("###actor_spawn_favourites_add");
@@ -83,8 +78,6 @@ public class MainWindow : Window
             }
         }
 
-        _log.Debug("Finished drawing buttons.");
-        _log.Debug("Drawing sliders.");
         if (_spawnScale <= SpawnScaleMin) _spawnScale = SpawnScaleMin;
         ImGui.SliderFloat("Scale", ref _spawnScale, SpawnScaleMin, 1f);
         GuiHelpers.Tooltip("The scale to spawn the actor as, this has to be set before spawning.");
@@ -93,8 +86,6 @@ public class MainWindow : Window
         ImGui.SliderFloat("Opacity", ref _opacity, OpacityMin, 1f);
         GuiHelpers.Tooltip("The opacity to spawn the actor as, this has to be set before spawning.");
         
-        _log.Debug("Finished drawing sliders.");
-        _log.Debug("Drawing checkboxes.");
         ImGui.Checkbox("Auto Target", ref _autoTarget);
         Plugin.Configuration.AutoTarget = _autoTarget;
         
@@ -116,17 +107,13 @@ public class MainWindow : Window
             }
         }
         
-        _log.Debug("Finished drawing checkboxes.");
         
 #if ENABLE_SCENES
          if (ImGui.CollapsingHeader("Scenes"))
             DrawScenes();       
 #endif
 
-        _log.Debug("Finished drawing GPose Utilities window.");
-        _log.Debug("Drawing popup.");
         DrawPopup();
-        _log.Debug("Finished drawing popup.");
         
     }
     

@@ -3,6 +3,8 @@ using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Numerics;
 using System.Threading.Tasks;
+using Brio.API;
+using Brio.API.Enums;
 using Dalamud.Game.ClientState.Objects.Types;
 using Dalamud.Plugin;
 using Dalamud.Plugin.Ipc;
@@ -14,17 +16,22 @@ namespace GposeUtils.Utils;
 
 public class IPCUtils
 {
-    private static ICallGateSubscriber<bool, bool, bool, Task<IGameObject?>> _spawnBrio;
-    private static ICallGateSubscriber<(int, int)> _brioApiVersion;
+    private static SpawnActor _spawnBrio;
+    private static ApiVersion _brioApiVersion;
+
+    private static ICallGateSubscriber<(int, int)> _ktisisApiVersion;
+    private static ICallGateSubscriber<bool> _ktisisRefreshActors;
 
     internal unsafe delegate void ActorSpawned(Character* actor);
 
     internal static ActorSpawned? OnActorSpawned;
     
     public static void Init(IDalamudPluginInterface pi)
-    { 
-        _brioApiVersion = pi.GetIpcSubscriber<(int, int)>("Brio.ApiVersion");
-        _spawnBrio = pi.GetIpcSubscriber<bool, bool, bool, Task<IGameObject?>>("Brio.Actor.SpawnExAsync");
+    {
+        _brioApiVersion = new ApiVersion(pi);
+        _spawnBrio = new SpawnActor(pi);  //pi.GetIpcSubscriber<bool, bool, bool, Task<IGameObject?>>("Brio.Actor.SpawnExAsync");
+        _ktisisApiVersion = pi.GetIpcSubscriber<(int, int)>("Ktisis.ApiVersion");
+        _ktisisRefreshActors = pi.GetIpcSubscriber<bool>("Ktisis.RefreshActors");
     }
     
     internal static bool ShowBrioAvailable { get; private set; }
@@ -36,8 +43,24 @@ public class IPCUtils
         
         try
         {
-            var (major, minor) = _brioApiVersion.InvokeFunc(); 
-            return ShowBrioAvailable = major == 2;
+            var (major, minor) = _brioApiVersion.Invoke(); 
+            return ShowBrioAvailable = major == 3;
+        }
+        catch (Exception)
+        {
+            return false;
+        }
+    }
+    
+    internal static bool IsKtisisAvailable()
+    {
+        if (Services.PluginInterface.InstalledPlugins.All(x => x.Name != "Ktisis"))
+            return false;
+        
+        try
+        {
+            var (major, _) = _ktisisApiVersion.InvokeFunc(); 
+            return major == 1;
         }
         catch (Exception)
         {
@@ -49,18 +72,34 @@ public class IPCUtils
     {
         if (!Plugin.IsInGPose) return null;
         if (!IsBrioAvailable()) return null;
+
+        IGameObject? result = null;
         
         try
-        {
-            return await SpawnActorAsync(false, false, false);
+        { 
+            result = await SpawnActorAsync(false, false, false);
         }
         catch (Exception e)
         {
             Services.Log.Error(e, "Failed to spawn Brio actor.");
+            return null;
             //IGNORED
         }
 
-        return null;
+        try
+        {
+            if (IsKtisisAvailable() && !_ktisisRefreshActors.InvokeFunc())
+            {
+                throw new Exception();
+            }
+        }
+        catch (Exception e)
+        {
+            Services.Log.Error(e, "Failed to refresh Ktisis actors.");
+            //IGNORED
+        }
+
+        return result;
     }
 
     internal static async Task<IGameObject?> SpawnWithModelId(int modelId, Vector3? positionDelta = null, float? scale = null, float? opacity = null)
@@ -114,6 +153,12 @@ public class IPCUtils
     {
         if (!IsBrioAvailable()) return null;
 
-        return await _spawnBrio.InvokeFunc(spawnWithCompanionSlot, selectInHierarchy, spawnFrozen);
+        var flags = SpawnFlags.Default;
+        
+        if (spawnWithCompanionSlot)
+            flags |= SpawnFlags.ReserveCompanionSlot;
+        
+        
+        return _spawnBrio.Invoke(flags/*, selectInHierarchy*/, spawnFrozen);
     }
 }

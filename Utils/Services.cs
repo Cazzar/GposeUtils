@@ -18,6 +18,12 @@ public class Services
     internal static IClientState ClientState { get; private set; } = null!;
     
     [PluginService]
+    public static IPlayerState PlayerState { get; private set; } = null!;
+    
+    [PluginService]
+    public static IObjectTable ObjectTable { get; private set; } = null!;
+    
+    [PluginService]
     internal static IDalamudPluginInterface PluginInterface { get; private set; } = null!;
     
     [PluginService]
